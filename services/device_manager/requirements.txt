@@ -1,0 +1,8 @@
+APScheduler>=3.10.4
+google-cloud-firestore>=2.13.1
+google-auth>=2.23.4
+requests>=2.31.0
+cryptography>=41.0.7
+python-dotenv>=1.0.0
+fastapi>=0.109.0
+uvicorn>=0.27.0

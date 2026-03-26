@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    command: gcloud emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    environment:
+      - CLOUDSDK_CORE_PROJECT=test-project
+
+  telegram-bot:
+    build: ./services/telegram_bot
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ADMIN_ID=${TELEGRAM_ADMIN_ID}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8080
+      - DEVICE_MANAGER_URL=http://device-manager:8001
+    depends_on:
+      - firestore-emulator
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  device-manager:
+    build: ./services/device_manager
+    environment:
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_REGION=${GCP_REGION}
+      - FIREBASE_CREDENTIALS_PATH=/app/credentials/firebase-key.json
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - MAX_CONCURRENT_DEVICES=${MAX_CONCURRENT_DEVICES:-6}
+      - JOB_TIMEOUT_MINUTES=${JOB_TIMEOUT_MINUTES:-10}
+      - DEVICE_AUTOMATION_URL=http://device-automation:8002
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8080
+    volumes:
+      - ./credentials:/app/credentials:ro
+    depends_on:
+      - firestore-emulator
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+
+  device-automation:
+    build: ./services/device_automation
+    environment:
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - FIREBASE_CREDENTIALS_PATH=/app/credentials/firebase-key.json
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - FIRESTORE_EMULATOR_HOST=firestore-emulator:8080
+    volumes:
+      - ./credentials:/app/credentials:ro
+    depends_on:
+      - firestore-emulator
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
