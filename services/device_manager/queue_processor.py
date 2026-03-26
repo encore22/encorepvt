@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 MAX_CONCURRENT_DEVICES = int(os.environ.get("MAX_CONCURRENT_DEVICES", 6))
 JOB_TIMEOUT_MINUTES = int(os.environ.get("JOB_TIMEOUT_MINUTES", 10))
+# Extra buffer beyond JOB_TIMEOUT_MINUTES before a processing job is considered stuck
+JOB_TIMEOUT_BUFFER_MINUTES = 2
 DEVICE_AUTOMATION_URL = os.environ.get("DEVICE_AUTOMATION_URL", "http://device-automation:8002")
 DEVICE_CREATION_RETRIES = int(os.environ.get("DEVICE_CREATION_RETRIES", 3))
 
@@ -133,7 +135,7 @@ class QueueProcessor:
             resp = requests.post(
                 f"{DEVICE_AUTOMATION_URL}/automate",
                 json=payload,
-                timeout=600,  # 10 min
+                timeout=JOB_TIMEOUT_MINUTES * 60,
             )
             resp.raise_for_status()
             result = resp.json()
@@ -184,7 +186,9 @@ class QueueProcessor:
     def check_timeouts(self) -> None:
         """Mark jobs that have exceeded the timeout as timed out."""
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=JOB_TIMEOUT_MINUTES + 2)
+            cutoff = datetime.now(timezone.utc) - timedelta(
+                minutes=JOB_TIMEOUT_MINUTES + JOB_TIMEOUT_BUFFER_MINUTES
+            )
             processing_jobs = self.fs.get_jobs_by_status("processing")
             for job in processing_jobs:
                 created_at = job.get("created_at")

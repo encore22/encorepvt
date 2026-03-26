@@ -13,12 +13,22 @@ def get_totp_code(secret: str) -> str:
     """
     Get current TOTP code. Tries 2fa.live first, falls back to pyotp.
 
+    SECURITY NOTE: 2fa.live is an external third-party service. Using it sends
+    the TOTP secret to that service, which is a security trade-off. If your
+    threat model does not allow sharing secrets with third parties, set
+    TOTP_USE_LOCAL_ONLY=1 in your environment to skip the 2fa.live call and
+    always generate codes locally via pyotp.
+
     Args:
         secret: Base32 TOTP secret key (e.g., JBSWY3DPEHPK3PXP)
 
     Returns:
         6-digit TOTP code as string
     """
+    import os
+    if os.environ.get("TOTP_USE_LOCAL_ONLY", "").lower() in ("1", "true", "yes"):
+        return _get_from_pyotp(secret)
+
     # Try 2fa.live
     try:
         code = _get_from_2fa_live(secret)

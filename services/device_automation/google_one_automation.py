@@ -85,7 +85,7 @@ class GoogleOneAutomation:
             # Use UIAutomator2 to find elements containing the offer URL
             elements = self.driver.find_elements(
                 AppiumBy.ANDROID_UIAUTOMATOR,
-                'new UiSelector().descriptionContains("one.google.com/partner-eft-onboard")',
+                f'new UiSelector().descriptionContains("{OFFER_LINK_PREFIX}")',
             )
             for el in elements:
                 desc = el.get_attribute("contentDescription") or ""

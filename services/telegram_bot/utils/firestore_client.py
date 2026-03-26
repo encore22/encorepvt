@@ -37,12 +37,12 @@ class FirestoreClient:
         limit: int = 5,
         status_filter: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
+        query = self.db.collection("jobs").where("user_id", "==", user_id)
+        if status_filter:
+            query = query.where("status", "==", status_filter)
         query = (
-            self.db.collection("jobs")
-            .where("user_id", "==", user_id)
+            query
             .order_by("created_at", direction=firestore.Query.DESCENDING)
             .limit(limit)
         )
-        if status_filter:
-            query = query.where("status", "==", status_filter)
         return [doc.to_dict() for doc in query.stream()]
