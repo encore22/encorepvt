@@ -1,15 +1,10 @@
 import logging
 import os
+from typing import Any, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
-from gmail_login import GmailLogin
-from google_one_automation import GoogleOneAutomation
-from appium_client import AppiumClient
-from totp_extractor import get_totp_code
-from utils.firestore_client import FirestoreClient
 
 load_dotenv()
 
@@ -20,13 +15,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Device Automation Service")
-_fs_client: FirestoreClient | None = None
+
+# All heavy dependencies are imported lazily inside the /automate handler so
+# that Cloud Run can start the container and pass the health check before any
+# network-dependent initialisation takes place.
+_fs_client: Optional[Any] = None
 
 
-def get_fs_client() -> FirestoreClient:
-    """Return the shared FirestoreClient, creating it lazily on first use."""
+def _get_fs_client():
+    """Return the shared FirestoreClient, importing and creating it on first use."""
     global _fs_client
     if _fs_client is None:
+        from utils.firestore_client import FirestoreClient  # noqa: PLC0415
         _fs_client = FirestoreClient()
     return _fs_client
 
@@ -50,24 +50,30 @@ class AutomationResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    """Health check - no Firestore dependency."""
+    """Health check – no external dependencies."""
     return {"status": "ok"}
 
 
 @app.post("/automate", response_model=AutomationResponse)
 def automate(req: AutomationRequest):
     """Main endpoint: execute Gmail + Google One automation on the given device."""
+    # All heavy imports happen here, well after Cloud Run has started.
+    from utils.encryption import decrypt_value  # noqa: PLC0415
+    from appium_client import AppiumClient  # noqa: PLC0415
+    from totp_extractor import get_totp_code  # noqa: PLC0415
+    from gmail_login import GmailLogin  # noqa: PLC0415
+    from google_one_automation import GoogleOneAutomation  # noqa: PLC0415
+
     logger.info("Automation request for job %s on device %s", req.job_id, req.device_id)
 
     try:
-        fs_client = get_fs_client()
+        fs_client = _get_fs_client()
     except Exception as e:
         logger.error("Failed to initialize Firestore: %s", e)
         raise HTTPException(status_code=503, detail="Service initialization failed")
 
     fs_client.log_event(req.job_id, "automation_start", "Starting automation")
 
-    from utils.encryption import decrypt_value
     try:
         email = decrypt_value(req.email_encrypted)
         password = decrypt_value(req.password_encrypted)
