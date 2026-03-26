@@ -23,6 +23,8 @@ from handlers.start_handler import (
 )
 from handlers.status_handler import status_command
 from handlers.cancel_handler import cancel_command
+from handlers.history_handler import history_command
+from handlers.help_handler import help_command
 
 load_dotenv()
 
@@ -56,6 +58,8 @@ def main() -> None:
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler("status", status_command))
     application.add_handler(CommandHandler("cancel", cancel_command))
+    application.add_handler(CommandHandler("history", history_command))
+    application.add_handler(CommandHandler("help", help_command))
 
     logger.info("Telegram bot starting...")
     application.run_polling(allowed_updates=["message"])
