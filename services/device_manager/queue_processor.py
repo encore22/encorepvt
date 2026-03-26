@@ -68,8 +68,6 @@ class QueueProcessor:
         session_name = None
 
         for attempt in range(1, DEVICE_CREATION_RETRIES + 1):
-            session_name = None
-            device_id = None
             try:
                 logger.info("Creating device for job %s (attempt %d)", job_id, attempt)
                 device_session = self.farm.create_device_session(job_id)
@@ -145,7 +143,7 @@ class QueueProcessor:
             resp = requests.post(
                 f"{DEVICE_AUTOMATION_URL}/automate",
                 json=payload,
-                timeout=JOB_TIMEOUT_MINUTES * 60,
+                timeout=JOB_TIMEOUT_MINUTES * 60 + 30,  # +30 s buffer for response delivery
             )
             resp.raise_for_status()
             result = resp.json()

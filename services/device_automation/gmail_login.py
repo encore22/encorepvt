@@ -85,7 +85,8 @@ class GmailLogin:
                 (AppiumBy.XPATH, '//android.widget.EditText[@resource-id="identifierId"]')
             )
         )
-        email_field.clear()
+        if email_field.get_attribute("text"):
+            email_field.clear()
         email_field.send_keys(email)
 
         # Click Next

@@ -52,7 +52,7 @@ class DeviceFarmClient:
         url = f"{TESTING_API}/projects/{self.project_id}/deviceSessions"
         payload = {
             "androidDevice": {
-                "androidModelId": "oriole",  # Pixel 6 - use closest available; Pixel 10 not yet in catalog
+                "androidModelId": "oriole",  # Placeholder; overridden by model ID loop below
                 "androidVersionId": "33",
                 "locale": "en_US",
                 "orientation": "portrait",

@@ -24,7 +24,14 @@ gcloud services enable \
 
 # Create Firestore database (Native mode)
 echo "Creating Firestore database..."
-gcloud firestore databases create --region="$REGION" || echo "Firestore database creation skipped (may already exist or region mismatch)"
+gcloud firestore databases create --region="$REGION" || {
+  EXIT_CODE=$?
+  echo "WARNING: Firestore database creation failed (exit $EXIT_CODE)."
+  echo "  -> If the database already exists in region '$REGION', this is safe to ignore."
+  echo "  -> If you see a 'region mismatch' error, ensure REGION matches the region where"
+  echo "     your default Firestore database was originally created."
+  echo "  -> Run: gcloud firestore databases list  to view existing databases."
+}
 
 # Create service account
 SA_NAME="gmail-automation-sa"

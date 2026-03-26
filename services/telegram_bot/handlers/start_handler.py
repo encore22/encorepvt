@@ -19,7 +19,10 @@ WAITING_2FA = 3
 fs_client = FirestoreClient()
 
 
-_EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+_EMAIL_RE = re.compile(
+    r'^[a-zA-Z0-9][a-zA-Z0-9._%+\-]*@[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
+    r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,63}$'
+)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
