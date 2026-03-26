@@ -16,7 +16,15 @@ WAITING_EMAIL = 1
 WAITING_PASSWORD = 2
 WAITING_2FA = 3
 
-fs_client = FirestoreClient()
+_fs_client: FirestoreClient | None = None
+
+
+def get_fs_client() -> FirestoreClient:
+    """Return the shared FirestoreClient, creating it lazily on first use."""
+    global _fs_client
+    if _fs_client is None:
+        _fs_client = FirestoreClient()
+    return _fs_client
 
 
 _EMAIL_RE = re.compile(
@@ -115,7 +123,8 @@ async def receive_2fa_key(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "error": None,
         }
 
-        fs_client.create_job(job_id, job_data)
+        fs = get_fs_client()
+        fs.create_job(job_id, job_data)
         logger.info("Job %s created for user %s", job_id, user_id)
 
         await update.message.reply_text(
