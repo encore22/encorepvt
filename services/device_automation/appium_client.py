@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 from appium import webdriver
-from appium.options import AppiumOptions
+from appium.options.android import UiAutomator2Options
 
 logger = logging.getLogger(__name__)
 
@@ -19,16 +19,14 @@ class AppiumClient:
 
     def connect(self, retries: int = 3, wait: int = 10):
         """Connect to device via Appium with retry logic."""
-        options = AppiumOptions()
-        options.platform_name = "Android"
-        options.automation_name = "UiAutomator2"
-        options.set_capability("appPackage", "com.google.android.gm")
-        options.set_capability("appActivity", ".ConversationListActivityGmail")
-        options.set_capability("noReset", True)
-        options.set_capability("fullReset", False)
-        options.set_capability("autoGrantPermissions", True)
-        options.set_capability("newCommandTimeout", 300)
-        options.set_capability("androidDeviceSocket", "appiumfwd")
+        options = UiAutomator2Options()
+        options.app_package = "com.google.android.gm"
+        options.app_activity = ".ConversationListActivityGmail"
+        options.no_reset = True
+        options.full_reset = False
+        options.auto_grant_permissions = True
+        options.new_command_timeout = 300
+        options.android_device_socket = "appiumfwd"
 
         if self.adb_host:
             options.set_capability("udid", f"{self.adb_host}:{self.adb_port}")
