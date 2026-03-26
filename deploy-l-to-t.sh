@@ -151,16 +151,13 @@ done
 ok "Firestore collections initialized"
 
 # ---------------------------------------------------------------------------
-# Step Q - Deploy Firestore Security Rules
+# Step Q - Skip Firestore Security Rules (apply later via Firebase CLI)
 # ---------------------------------------------------------------------------
-step "Step Q: Deploying Firestore security rules..."
+step "Step Q: Firestore security rules..."
 
-if [ -f "firestore.rules" ]; then
-  gcloud firestore rules deploy firestore.rules
-  ok "Firestore security rules deployed"
-else
-  warn "firestore.rules not found - skipping"
-fi
+echo "⏭️  Skipping Firestore rules deployment (will be applied later)"
+warn "Deploy rules before going to production:"
+warn "  firebase deploy --only firestore:rules"
 
 # ---------------------------------------------------------------------------
 # Step R - Verify All Services
