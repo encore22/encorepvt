@@ -31,6 +31,17 @@ def queue_stats():
     return processor.get_stats()
 
 
+@app.post("/process-queue")
+def process_queue_webhook():
+    """Webhook endpoint for Cloud Scheduler to trigger queue processing."""
+    try:
+        processor.process_queue()
+        return {"status": "queue processing triggered"}
+    except Exception:
+        logger.exception("Error triggering queue processing")
+        raise
+
+
 def run_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(
@@ -53,5 +64,5 @@ def run_scheduler():
 
 if __name__ == "__main__":
     run_scheduler()
-    port = int(os.environ.get("PORT", 8001))
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
