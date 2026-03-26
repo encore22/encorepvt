@@ -1,0 +1,6 @@
+python-telegram-bot>=20.7
+google-cloud-firestore>=2.13.1
+cryptography>=41.0.7
+requests>=2.31.0
+google-auth>=2.23.4
+python-dotenv>=1.0.0

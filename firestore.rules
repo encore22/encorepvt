@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only authenticated server-side requests allowed
+    // All client access is denied; services use service account credentials
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

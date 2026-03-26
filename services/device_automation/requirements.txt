@@ -1,0 +1,12 @@
+fastapi>=0.109.0
+uvicorn>=0.27.0
+Appium-Python-Client>=3.1.0
+selenium>=4.15.0
+google-cloud-firestore>=2.13.1
+google-auth>=2.23.4
+cryptography>=41.0.7
+requests>=2.31.0
+pyotp>=2.9.0
+pytesseract>=0.3.10
+Pillow>=10.1.0
+python-dotenv>=1.0.0
