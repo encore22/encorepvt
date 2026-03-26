@@ -50,6 +50,7 @@ class AutomationResponse(BaseModel):
 
 @app.get("/health")
 def health():
+    """Health check - no Firestore dependency."""
     return {"status": "ok"}
 
 
@@ -57,7 +58,13 @@ def health():
 def automate(req: AutomationRequest):
     """Main endpoint: execute Gmail + Google One automation on the given device."""
     logger.info("Automation request for job %s on device %s", req.job_id, req.device_id)
-    fs_client = get_fs_client()
+
+    try:
+        fs_client = get_fs_client()
+    except Exception as e:
+        logger.error("Failed to initialize Firestore: %s", e)
+        raise HTTPException(status_code=503, detail="Service initialization failed")
+
     fs_client.log_event(req.job_id, "automation_start", "Starting automation")
 
     from utils.encryption import decrypt_value
