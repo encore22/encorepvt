@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -18,6 +19,9 @@ WAITING_2FA = 3
 fs_client = FirestoreClient()
 
 
+_EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Entry point: greet user and ask for email."""
     user = update.effective_user
@@ -34,9 +38,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Validate and store email, ask for password."""
     email = update.message.text.strip()
-    if "@" not in email or "." not in email:
+    if not _EMAIL_RE.match(email):
         await update.message.reply_text(
-            "❌ That doesn't look like a valid email. Please try again:"
+            "❌ That doesn't look like a valid email address. Please try again:"
         )
         return WAITING_EMAIL
 

@@ -219,7 +219,8 @@ class GoogleOneAutomation:
 
     def _extract_url(self, text: str) -> Optional[str]:
         """Extract the offer URL from text using regex."""
-        pattern = r'https://one\.google\.com/partner-eft-onboard/[^\s\'"<>]+'
+        # Allow all valid URL characters including query strings and fragments
+        pattern = r'https://one\.google\.com/partner-eft-onboard/[A-Za-z0-9\-._~:/?#\[\]@!$&\'()*+,;=%]+'
         match = re.search(pattern, text)
         if match:
             return match.group(0).rstrip(".,;)")

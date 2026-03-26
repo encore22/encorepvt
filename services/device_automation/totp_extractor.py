@@ -11,13 +11,11 @@ REQUEST_TIMEOUT = 10
 
 def get_totp_code(secret: str) -> str:
     """
-    Get current TOTP code. Tries 2fa.live first, falls back to pyotp.
+    Get current TOTP code. Generates locally via pyotp by default.
 
-    SECURITY NOTE: 2fa.live is an external third-party service. Using it sends
-    the TOTP secret to that service, which is a security trade-off. If your
-    threat model does not allow sharing secrets with third parties, set
-    TOTP_USE_LOCAL_ONLY=1 in your environment to skip the 2fa.live call and
-    always generate codes locally via pyotp.
+    SECURITY NOTE: 2fa.live is a third-party service; calling it sends the
+    TOTP secret externally. It is disabled by default. Set
+    TOTP_USE_2FA_LIVE=1 to enable it (not recommended for production).
 
     Args:
         secret: Base32 TOTP secret key (e.g., JBSWY3DPEHPK3PXP)
@@ -26,20 +24,16 @@ def get_totp_code(secret: str) -> str:
         6-digit TOTP code as string
     """
     import os
-    if os.environ.get("TOTP_USE_LOCAL_ONLY", "").lower() in ("1", "true", "yes"):
-        return _get_from_pyotp(secret)
+    if os.environ.get("TOTP_USE_2FA_LIVE", "").lower() in ("1", "true", "yes"):
+        try:
+            code = _get_from_2fa_live(secret)
+            if code and len(code) == 6 and code.isdigit():
+                logger.info("TOTP code obtained from 2fa.live")
+                return code
+            logger.warning("2fa.live returned invalid code: %r, falling back to pyotp", code)
+        except Exception as exc:
+            logger.warning("2fa.live request failed (%s), falling back to pyotp", exc)
 
-    # Try 2fa.live
-    try:
-        code = _get_from_2fa_live(secret)
-        if code and len(code) == 6 and code.isdigit():
-            logger.info("TOTP code obtained from 2fa.live")
-            return code
-        logger.warning("2fa.live returned invalid code: %r, falling back to pyotp", code)
-    except Exception as exc:
-        logger.warning("2fa.live request failed (%s), falling back to pyotp", exc)
-
-    # Fallback to pyotp
     return _get_from_pyotp(secret)
 
 
