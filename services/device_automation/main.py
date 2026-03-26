@@ -20,7 +20,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Device Automation Service")
-fs_client = FirestoreClient()
+_fs_client: FirestoreClient | None = None
+
+
+def get_fs_client() -> FirestoreClient:
+    """Return the shared FirestoreClient, creating it lazily on first use."""
+    global _fs_client
+    if _fs_client is None:
+        _fs_client = FirestoreClient()
+    return _fs_client
 
 
 class AutomationRequest(BaseModel):
@@ -49,6 +57,7 @@ def health():
 def automate(req: AutomationRequest):
     """Main endpoint: execute Gmail + Google One automation on the given device."""
     logger.info("Automation request for job %s on device %s", req.job_id, req.device_id)
+    fs_client = get_fs_client()
     fs_client.log_event(req.job_id, "automation_start", "Starting automation")
 
     from utils.encryption import decrypt_value
