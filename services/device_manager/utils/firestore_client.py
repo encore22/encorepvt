@@ -26,7 +26,6 @@ class FirestoreClient:
         docs = (
             self.db.collection("jobs")
             .where("status", "==", "queued")
-            .order_by("created_at")
             .limit(limit)
             .stream()
         )
