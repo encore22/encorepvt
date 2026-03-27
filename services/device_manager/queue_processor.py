@@ -16,7 +16,7 @@ MAX_CONCURRENT_DEVICES = int(os.environ.get("MAX_CONCURRENT_DEVICES", 6))
 JOB_TIMEOUT_MINUTES = int(os.environ.get("JOB_TIMEOUT_MINUTES", 10))
 # Extra buffer beyond JOB_TIMEOUT_MINUTES before a processing job is considered stuck
 JOB_TIMEOUT_BUFFER_MINUTES = 2
-DEVICE_AUTOMATION_URL = os.environ.get("DEVICE_AUTOMATION_URL", "http://device-automation:8002")
+DEVICE_AUTOMATION_URL = os.environ.get("DEVICE_AUTOMATION_URL", "http://device-automation:8080")
 DEVICE_CREATION_RETRIES = int(os.environ.get("DEVICE_CREATION_RETRIES", 3))
 
 
