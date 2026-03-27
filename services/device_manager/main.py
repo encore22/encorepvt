@@ -1,13 +1,12 @@
 import logging
 import os
 import threading
+from typing import Any, Optional
 
 import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI
-
-from queue_processor import QueueProcessor
 
 load_dotenv()
 
@@ -18,24 +17,34 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Device Manager Service")
-processor = QueueProcessor()
+_processor: Optional[Any] = None
+
+
+def _get_processor():
+    """Return the shared QueueProcessor, importing and creating it on first use."""
+    global _processor
+    if _processor is None:
+        from queue_processor import QueueProcessor  # noqa: PLC0415
+        _processor = QueueProcessor()
+    return _processor
 
 
 @app.get("/health")
 def health():
+    """Health check – no heavy initialization."""
     return {"status": "ok"}
 
 
 @app.get("/queue/stats")
 def queue_stats():
-    return processor.get_stats()
+    return _get_processor().get_stats()
 
 
 @app.post("/process-queue")
 def process_queue_webhook():
     """Webhook endpoint for Cloud Scheduler to trigger queue processing."""
     try:
-        processor.process_queue()
+        _get_processor().process_queue()
         return {"status": "queue processing triggered"}
     except Exception:
         logger.exception("Error triggering queue processing")
@@ -45,14 +54,14 @@ def process_queue_webhook():
 def run_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(
-        processor.process_queue,
+        lambda: _get_processor().process_queue(),
         "interval",
         seconds=30,
         id="process_queue",
         max_instances=1,
     )
     scheduler.add_job(
-        processor.check_timeouts,
+        lambda: _get_processor().check_timeouts(),
         "interval",
         seconds=60,
         id="check_timeouts",
