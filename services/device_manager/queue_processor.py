@@ -66,10 +66,12 @@ class QueueProcessor:
 
         device_session = None
         session_name = None
+        device_id = None
 
         for attempt in range(1, DEVICE_CREATION_RETRIES + 1):
             try:
                 logger.info("Creating device for job %s (attempt %d)", job_id, attempt)
+                logger.info("Using project: %s", self.farm.project_id)
                 device_session = self.farm.create_device_session(job_id)
                 session_name = device_session.get("name", "")
 
