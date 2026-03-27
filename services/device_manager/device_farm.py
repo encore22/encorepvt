@@ -18,7 +18,9 @@ class DeviceFarmClient:
     """Firebase Test Lab API client for creating and managing virtual devices."""
 
     def __init__(self):
-        self.project_id = os.environ["GCP_PROJECT_ID"]
+        self.project_id = os.environ.get("GCP_PROJECT_ID")
+        if not self.project_id:
+            raise RuntimeError("GCP_PROJECT_ID environment variable not set")
         self.region = os.environ.get("GCP_REGION", "us-central1")
         cred_path = os.environ.get("FIREBASE_CREDENTIALS_PATH")
         scopes = ["https://www.googleapis.com/auth/cloud-platform"]
