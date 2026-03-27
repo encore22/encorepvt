@@ -2,6 +2,8 @@ import logging
 import os
 from typing import Any, Optional
 
+import uvicorn
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -119,3 +121,8 @@ def automate(req: AutomationRequest):
                 driver.quit()
             except Exception:
                 pass
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
