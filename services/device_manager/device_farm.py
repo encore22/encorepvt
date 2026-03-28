@@ -72,7 +72,13 @@ class DeviceFarmClient:
                     data = resp.json()
                     logger.info("Created device session: %s (model: %s)", data.get("name"), model_id)
                     return data
-                logger.warning("Model %s unavailable (HTTP %s), trying next", model_id, resp.status_code)
+                error_msg = f"HTTP {resp.status_code}"
+                try:
+                    error_data = resp.json()
+                    error_msg = f"{error_msg}: {error_data.get('error', {}).get('message', resp.text)}"
+                except ValueError:
+                    error_msg = f"{error_msg}: {resp.text}"
+                logger.warning("Model %s unavailable - %s, trying next", model_id, error_msg)
             except requests.RequestException as exc:
                 logger.warning("Request failed for model %s: %s", model_id, exc)
 
