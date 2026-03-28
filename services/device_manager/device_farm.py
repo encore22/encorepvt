@@ -54,7 +54,7 @@ class DeviceFarmClient:
         url = f"{TESTING_API}/projects/{self.project_id}/deviceSessions"
         payload = {
             "androidDevice": {
-                "androidModelId": "oriole",  # Placeholder; overridden by model ID loop below
+                "androidModelId": "blazer",  # Placeholder; overridden by model ID loop below
                 "androidVersionId": "33",
                 "locale": "en_US",
                 "orientation": "portrait",
@@ -63,8 +63,8 @@ class DeviceFarmClient:
             "ttl": "900s",  # 15 min max session
         }
 
-        # Try Pixel 10 / Pixel 9 model IDs first, fall back to Pixel 6
-        for model_id in ["panther", "cheetah", "oriole"]:
+        # Try Pixel 10 Pro variants in order: Pixel 10 Pro, Pixel 10 Pro XL, Pixel 10 Pro Fold
+        for model_id in ["blazer", "mustang", "rango"]:
             payload["androidDevice"]["androidModelId"] = model_id
             try:
                 resp = requests.post(url, json=payload, headers=self._headers(), timeout=30)
