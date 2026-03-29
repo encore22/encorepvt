@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import threading
 from typing import Any, Optional
 
@@ -7,6 +8,9 @@ import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI
+
+# Add current directory to Python path for relative imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 load_dotenv()
 
@@ -19,7 +23,6 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Device Manager Service")
 _processor: Optional[Any] = None
 
-
 def _get_processor():
     """Return the shared QueueProcessor, importing and creating it on first use."""
     global _processor
@@ -28,17 +31,14 @@ def _get_processor():
         _processor = QueueProcessor()
     return _processor
 
-
 @app.get("/health")
 def health():
     """Health check – no heavy initialization."""
     return {"status": "ok"}
 
-
 @app.get("/queue/stats")
 def queue_stats():
     return _get_processor().get_stats()
-
 
 @app.post("/process-queue")
 def process_queue_webhook():
@@ -49,7 +49,6 @@ def process_queue_webhook():
     except Exception:
         logger.exception("Error triggering queue processing")
         raise
-
 
 def run_scheduler():
     scheduler = BackgroundScheduler()
@@ -69,7 +68,6 @@ def run_scheduler():
     )
     scheduler.start()
     logger.info("Scheduler started")
-
 
 if __name__ == "__main__":
     run_scheduler()
