@@ -1,1 +1,1 @@
-web: python services/device_manager/main.py
+web: cd services/device_manager && python main.py
