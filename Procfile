@@ -1,0 +1,1 @@
+web: python services/device_manager/main.py
