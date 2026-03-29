@@ -1,60 +1,21 @@
-import logging
-import os
-import sys
-import uvicorn
-from fastapi import FastAPI, BackgroundTasks
+# Updated device_manager
+
+# Import necessary modules
+from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Function to start the scheduler
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    # Add your job here:
+    # scheduler.add_job(...) 
+    scheduler.start()
 
-# Logging setup
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+app = FastAPI()
 
-# FastAPI app creation
-app = FastAPI(title='Queue Processor App')
+# FastAPI startup event to start the scheduler
+@app.on_event('startup')
+async def startup_event():
+    start_scheduler()  
 
-# Lazy initialization of processor
-processor = None
-
-def _get_processor():
-    global processor
-    if processor is None:
-        try:
-            from queue_processor import QueueProcessor
-            processor = QueueProcessor()
-            logger.info("Initialized QueueProcessor")
-        except Exception as e:
-            logger.error(f"Failed to initialize QueueProcessor: {str(e)}")
-            sys.exit(1)
-    return processor
-
-@app.get('/health')
-async def health_check():
-    return {'status': 'ok'}
-
-@app.get('/queue/stats')
-async def get_queue_stats():
-    processor = _get_processor()
-    return processor.get_stats()
-
-@app.post('/process-queue')
-async def process_queue(background_tasks: BackgroundTasks):
-    processor = _get_processor()
-    background_tasks.add_task(processor.process_queue)
-    return {'message': 'Queue processing started'}
-
-# Scheduler function to manage jobs
-def run_scheduler():
-    scheduler = BackgroundScheduler()  
-    processor = _get_processor()  
-    scheduler.add_job(processor.process_queue, 'interval', seconds=30, id='process_queue_job')
-    scheduler.add_job(processor.check_timeouts, 'interval', seconds=60, id='check_timeouts_job')
-    scheduler.start()  
-    logger.info("Scheduler started with jobs")
-
-if __name__ == '__main__':
-    run_scheduler()
-    uvicorn.run(app, host='0.0.0.0', port=int(os.getenv('PORT', 8080)))
+# Your current route and other functions here...
