@@ -1,19 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.8
 
-WORKDIR /app/services/device_manager
+# Set the working directory
+WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends 
-    gcc 
-    && rm -rf /var/lib/apt/lists/*
-
+# Copy dependencies and application code
 COPY services/device_manager/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY services/device_manager/ .
 
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8080
-
-CMD ["python", "main.py"]
+# Start command
+CMD ["python", "app.py"]
