@@ -1,51 +1,61 @@
 import logging
 import os
 import sys
-import threading
-import uvicorn
+from fastapi import FastAPI, BackgroundTasks
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
-# Initialize logging
-logging.basicConfig(level=logging.INFO)
+# Logging setup
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-class QueueProcessor:
-    
-    def __init__(self):
-        self.is_initialized = False
+# FastAPI app creation
+app = FastAPI(title='Queue Processor App')
 
-    def initialize(self):
-        # Heavy initialization code here
-        logging.info("QueueProcessor initialized.")
-        self.is_initialized = True
-
-    def process(self):
-        if not self.is_initialized:
-            logging.warning("QueueProcessor not initialized. Initializing now.")
-            self.initialize()
-        # Process the queue
-
-queue_processor = None
+# Lazy initialization of processor
+processor = None
 
 def _get_processor():
-    global queue_processor
-    if queue_processor is None:
-        queue_processor = QueueProcessor()
-    return queue_processor
+    global processor
+    if processor is None:
+        try:
+            from queue_processor import QueueProcessor
+            processor = QueueProcessor()
+            logger.info("Initialized QueueProcessor")
+        except Exception as e:
+            logger.error(f"Failed to initialize QueueProcessor: {str(e)}")
+            sys.exit(1)
+    return processor
 
-app = FastAPI()
+@app.get('/health')
+async def health_check():
+    return {'status': 'ok'}
 
-@app.on_event("startup")
-def startup_event():
-    logging.info("Starting up the application...")
-    # Do any startup tasks
-    # Initialize the scheduler after app is up
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: _get_processor().process(), 'interval', seconds=10)
-    scheduler.start()
-    logging.info("Scheduler started, processing job added.")
+@app.get('/queue/stats')
+async def get_queue_stats():
+    # Assuming the processor has a get_stats method
+    processor = _get_processor()
+    return processor.get_stats()  # Replace with actual method to get stats
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+@app.post('/process-queue')
+async def process_queue(background_tasks: BackgroundTasks):
+    processor = _get_processor()
+    background_tasks.add_task(processor.process_queue)  # Assuming process_queue is a method of QueueProcessor
+    return {'message': 'Queue processing started'}
+
+# Scheduler function to manage jobs
+def run_scheduler():
+    scheduler = BackgroundScheduler()  
+    processor = _get_processor()  
+    scheduler.add_job(processor.process_queue, 'interval', seconds=30, id='process_queue_job')
+    scheduler.add_job(processor.check_timeouts, 'interval', seconds=60, id='check_timeouts_job')
+    scheduler.start()  
+    logger.info("Scheduler started with jobs")
+
+if __name__ == '__main__':
+    run_scheduler()
+    # Start the FastAPI app
+    uvicorn.run(app, host='0.0.0.0', port=int(os.getenv('PORT', 8080)))
