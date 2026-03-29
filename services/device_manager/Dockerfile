@@ -1,15 +1,15 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /app/services/device_manager
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+RUN apt-get update && apt-get install -y --no-install-recommends 
+    gcc 
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY services/device_manager/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY services/device_manager/ .
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
