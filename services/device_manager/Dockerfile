@@ -1,14 +1,1 @@
-FROM python:3.8
-
-# Set the working directory
-WORKDIR /app
-
-# Copy dependencies and application code
-COPY services/device_manager/requirements.txt .
-COPY services/device_manager/ .
-
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Start command
-CMD ["python", "app.py"]
+FROM python:3.11-slim\n\n# Set the working directory\nWORKDIR /usr/src/app\n\n# Copy the current directory contents into the container at /usr/src/app\nCOPY . .\n\n# Install any needed packages specified in requirements.txt\nRUN pip install --no-cache-dir -r requirements.txt\n\n# Run main.py when the container launches\nCMD [ "python", "main.py" ]
